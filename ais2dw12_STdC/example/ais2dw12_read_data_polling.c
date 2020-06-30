@@ -50,7 +50,12 @@
 //#define STEVAL_MKI109V3
 #define NUCLEO_F411RE
 
-#if defined(STEVAL_MKI109V3)
+#if defined(__TRUSTINSOFT_ANALYZER__)
+// We will not use this variable, but this is a placeholder for
+// the communication interface.
+static char tis_bus;
+#define SENSOR_BUS tis_bus
+#elif defined(STEVAL_MKI109V3)
 /* MKI109V3: Define communication interface */
 #define SENSOR_BUS hspi2
 
@@ -66,8 +71,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include <stdio.h>
-#include "stm32f4xx_hal.h"
 #include "ais2dw12_reg.h"
+
+#if defined(__TRUSTINSOFT_ANALYZER__)
+// No platform includes
+#else
+#include "stm32f4xx_hal.h"
 #include "gpio.h"
 #include "i2c.h"
 #if defined(STEVAL_MKI109V3)
@@ -75,6 +84,7 @@
 #include "spi.h"
 #elif defined(NUCLEO_F411RE)
 #include "usart.h"
+#endif
 #endif
 
 typedef union{
@@ -172,13 +182,17 @@ void ais2dw12_read_data_polling(void)
       acceleration_mg[1] = ais2dw12_from_fs2_12bit_to_mg(data_raw_acceleration.i16bit[1]);
       acceleration_mg[2] = ais2dw12_from_fs2_12bit_to_mg(data_raw_acceleration.i16bit[2]);
      
-      sprintf((char*)tx_buffer, "Acceleration [mg]:%4.2f\t%4.2f\t%4.2f\r\n",
+      snprintf((char*)tx_buffer, 1000,
+               "Acceleration [mg]:%4.2f\t%4.2f\t%4.2f\r\n",
               acceleration_mg[0], acceleration_mg[1], acceleration_mg[2]);
       tx_com(tx_buffer, strlen((char const*)tx_buffer));
     }
   }
 }
 
+#if defined(__TRUSTINSOFT_ANALYZER__)
+#include"tis_platform.c"
+#else
 /*
  * @brief  Write generic device register (platform dependent)
  *
@@ -282,3 +296,4 @@ static void platform_init(void)
   HAL_Delay(1000);
 #endif
 }
+#endif

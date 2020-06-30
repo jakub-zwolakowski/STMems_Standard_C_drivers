@@ -50,6 +50,13 @@
 //#define STEVAL_MKI109V3
 #define NUCLEO_F411RE
 
+#if defined(__TRUSTINSOFT_ANALYZER__)
+// We will not use this variable, but this is a placeholder for
+// the communication interface.
+static char tis_bus;
+#define SENSOR_BUS tis_bus
+
+#else
 #if defined(STEVAL_MKI109V3)
 /* MKI109V3: Define communication interface */
 #define SENSOR_BUS hspi2
@@ -62,12 +69,20 @@
 #define SENSOR_BUS hi2c1
 
 #endif
+#endif
 
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include <stdio.h>
-#include "stm32f4xx_hal.h"
 #include "ais2dw12_reg.h"
+
+#if defined(__TRUSTINSOFT_ANALYZER__)
+// Nothing to include
+// This function should probably not be called directly anyway.
+#define HAL_Delay platform_delay
+
+#else
+#include "stm32f4xx_hal.h"
 #include "gpio.h"
 #include "i2c.h"
 #if defined(STEVAL_MKI109V3)
@@ -75,6 +90,7 @@
 #include "spi.h"
 #elif defined(NUCLEO_F411RE)
 #include "usart.h"
+#endif
 #endif
 
 typedef union{
@@ -236,7 +252,13 @@ static void test_self_test_ais2dw12(stmdev_ctx_t *dev_ctx)
       match[k] = 1;
     }
 
-    sprintf((char*)tx_buffer, "%d: |%f| <= |%f| <= |%f| %s\r\n", k,
+#if defined(__TRUSTINSOFT_ANALYZER__)
+    // sprintf is an avoidable security risk
+    snprintf((char*)tx_buffer, 1000,
+#else
+    sprintf((char*)tx_buffer,
+#endif
+            "%d: |%f| <= |%f| <= |%f| %s\r\n", k,
             ST_MIN_POS, ABSF(mediast[k] - media[k]), ST_MAX_POS,
             match[k] == 1 ? "PASSED" : "FAILED");
     tx_com(tx_buffer, strlen((char const*)tx_buffer));
@@ -278,6 +300,9 @@ void ais2dw12_self_test(void)
   }
 }
 
+#if defined(__TRUSTINSOFT_ANALYZER__)
+#include "tis_platform.c"
+#else
 /*
  * @brief  Write generic device register (platform dependent)
  *
@@ -381,3 +406,5 @@ static void platform_init(void)
   HAL_Delay(1000);
 #endif
 }
+
+#endif
