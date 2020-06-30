@@ -51,7 +51,13 @@
 //#define STEVAL_MKI109V3
 #define NUCLEO_F411RE
 
-#if defined(STEVAL_MKI109V3)
+#if defined(__TRUSTINSOFT_ANALYZER__)
+// We will not use this variable, but this is a placeholder for
+// the communication interface.
+static char tis_bus;
+#define SENSOR_BUS tis_bus
+
+#elif defined(STEVAL_MKI109V3)
 /* MKI109V3: Define communication interface */
 #define SENSOR_BUS hspi2
 
@@ -67,6 +73,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include <stdio.h>
+#include "ais2dw12_reg.h"
+
+#if defined(__TRUSTINSOFT_ANALYZER__)
+// No platform includes
+#else
 #include "stm32f4xx_hal.h"
 #include "ais2dw12_reg.h"
 #include "gpio.h"
@@ -76,6 +87,7 @@
 #include "spi.h"
 #elif defined(NUCLEO_F411RE)
 #include "usart.h"
+#endif
 #endif
 
 /* Private macro -------------------------------------------------------------*/
@@ -168,6 +180,10 @@ void ais2dw12_free_fall(void)
     }
   }
 }
+
+#if defined(__TRUSTINSOFT_ANALYZER__)
+#include"tis_platform.c"
+#else
 
 /*
  * @brief  Write generic device register (platform dependent)
@@ -272,3 +288,4 @@ static void platform_init(void)
   HAL_Delay(1000);
 #endif
 }
+#endif
