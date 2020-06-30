@@ -408,6 +408,9 @@ int32_t ais2dw12_flag_data_ready_get(stmdev_ctx_t *ctx, uint8_t *val);
 typedef struct{
   ais2dw12_status_dup_t   status_dup;
   ais2dw12_wake_up_src_t  wake_up_src;
+#if defined(__TRUSTINSOFT_ANALYZER__)
+ uint8_t :8;
+#endif
   ais2dw12_sixd_src_t     sixd_src;
   ais2dw12_all_int_src_t  all_int_src;
 } ais2dw12_all_sources_t;
