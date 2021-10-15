@@ -62,6 +62,8 @@ static int32_t platform_read(void *handle, uint8_t reg, uint8_t *bufp,
  */
 static void tx_com(uint8_t *tx_buffer, uint16_t len)
 {
+  printf("[TIS tx_com: %s]", tx_buffer);
+  tx_buffer[0] = '\0'; /* Reset buffer */
 }
 
 /*
